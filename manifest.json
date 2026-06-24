@@ -1,0 +1,17 @@
+{
+  "short_name": "AFI PWA",
+  "name": "ARMED FORCE INDONESIA Community",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1022/1022315.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#111827",
+  "theme_color": "#1f2937",
+  "display": "standalone",
+  "orientation": "portrait"
+}
+
