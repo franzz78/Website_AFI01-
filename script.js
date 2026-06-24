@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyD9BmV4XKXuMWa4PZHpb7Bbt-rHs61m3lE",
@@ -24,7 +24,6 @@ const BATAS_INDONESIA = {
 
 let localDatabaseRecords = [];
 
-// CEK GPS OTOMATIS SAAT WEBSITE PERTAMA KALI DIBUKA
 window.onload = function() {
     mintaIzinGPSOtomatis();
 }
@@ -44,7 +43,6 @@ window.mintaIzinGPSOtomatis = function() {
         const accuracy = position.coords.accuracy;
         const now = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
 
-        // VALIDASI WILAYAH INDONESIA
         if (lat >= BATAS_INDONESIA.minLat && lat <= BATAS_INDONESIA.maxLat &&
             lng >= BATAS_INDONESIA.minLng && lng <= BATAS_INDONESIA.maxLng) {
             
@@ -55,10 +53,8 @@ window.mintaIzinGPSOtomatis = function() {
                 accuracy: Math.round(accuracy) 
             };
 
-            // SIMPAN OTOMATIS KE FIREBASE
             push(ref(db, 'lokasi_afi'), logBaru)
                 .then(() => {
-                    // BERHASIL: Buka kunci website, sembunyikan layar pengunci
                     document.getElementById('gps-lock-screen').style.display = 'none';
                     document.getElementById('main-content').classList.remove('hidden');
                     
@@ -77,7 +73,6 @@ window.mintaIzinGPSOtomatis = function() {
         }
 
     }, (error) => {
-        // JIKA GPS MATI ATAU IZIN DITOLAK
         lockStatus.innerHTML = `<span style="color: #ef4444; font-weight: bold;"><i class="fa-solid fa-triangle-exclamation"></i> GAGAL: GPS Mati / Izin Lokasi Ditolak!</span>`;
     });
 }
@@ -99,6 +94,8 @@ function listenToFirebaseUpdates() {
         if (data) {
             Object.keys(data).forEach((key) => {
                 const record = data[key];
+                // Simpan key Firebase agar bisa dihapus secara spesifik nanti
+                record.firebaseKey = key; 
                 localDatabaseRecords.push(record); 
 
                 const mapsUrl = `https://www.google.com/maps?q=${record.lat},${record.lng}`;
@@ -108,6 +105,7 @@ function listenToFirebaseUpdates() {
                     <td>${record.lng}</td>
                     <td>${record.accuracy} m</td>
                     <td><a href="${mapsUrl}" target="_blank" style="color:#10b981;"><i class="fa-solid fa-map-location-dot"></i> Buka di Maps</a></td>
+                    <td><button onclick="deleteSingleRecord('${key}')" class="btn-delete-row"><i class="fa-solid fa-trash"></i></button></td>
                 </tr>`;
                 tableBody.insertAdjacentHTML('afterbegin', row); 
             });
@@ -116,9 +114,29 @@ function listenToFirebaseUpdates() {
             const latestRecord = data[latestKey];
             updateGoogleMapsView(latestRecord.lat, latestRecord.lng);
         } else {
-            tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Belum ada data koordinat di database.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Belum ada data koordinat di database.</td></tr>`;
+            const mapDiv = document.getElementById('map');
+            mapDiv.innerHTML = "🗺️ [ Tidak ada data lokasi untuk ditampilkan ]";
         }
     });
+}
+
+// HAPUS SATU DATA BERDASARKAN ID KEY DI FIREBASE
+window.deleteSingleRecord = function(key) {
+    if (confirm("Apakah Anda yakin ingin menghapus data koordinat ini secara permanen?")) {
+        remove(ref(db, `lokasi_afi/${key}`))
+            .then(() => alert("Data berhasil dihapus."))
+            .catch((err) => alert("Gagal menghapus data: " + err.message));
+    }
+}
+
+// HAPUS SEMUHA DATA SECARA TOTAL
+window.resetAllData = function() {
+    if (confirm("⚠️ PERINGATAN: Tindakan ini akan menghapus SELURUH data koordinat dari database Firebase secara permanen. Lanjutkan?")) {
+        remove(ref(db, 'lokasi_afi'))
+            .then(() => alert("Seluruh database koordinat berhasil dibersihkan!"))
+            .catch((err) => alert("Gagal mereset database: " + err.message));
+    }
 }
 
 function updateGoogleMapsView(lat, lng) {
@@ -154,7 +172,7 @@ window.verifyOwnerAccess = async function() {
 
 function showDashboard() {
     document.getElementById('biometric-auth').classList.add('hidden');
-    document.getElementById('owner-dashboard').classList.remove('hidden');
+    document.getElementById('admin-dashboard').classList.remove('hidden');
     listenToFirebaseUpdates();
 }
 
