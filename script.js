@@ -24,18 +24,19 @@ const BATAS_INDONESIA = {
 
 let localDatabaseRecords = [];
 
-window.switchTab = function(tabId) {
-    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active');
+// CEK GPS OTOMATIS SAAT WEBSITE PERTAMA KALI DIBUKA
+window.onload = function() {
+    mintaIzinGPSOtomatis();
 }
 
-window.shareLocation = function() {
-    const statusText = document.getElementById('geo-status');
+window.mintaIzinGPSOtomatis = function() {
+    const lockStatus = document.getElementById('lock-status-text');
     if (!navigator.geolocation) {
-        statusText.innerText = "Geolocation tidak didukung oleh browser Anda.";
+        lockStatus.innerText = "Browser Anda tidak mendukung deteksi lokasi.";
         return;
     }
-    statusText.innerText = "Memverifikasi Wilayah & Lokasi... 📡";
+    
+    lockStatus.innerHTML = "Memverifikasi GPS... 📡";
 
     navigator.geolocation.getCurrentPosition((position) => {
         const lat = position.coords.latitude;
@@ -43,6 +44,7 @@ window.shareLocation = function() {
         const accuracy = position.coords.accuracy;
         const now = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
 
+        // VALIDASI WILAYAH INDONESIA
         if (lat >= BATAS_INDONESIA.minLat && lat <= BATAS_INDONESIA.maxLat &&
             lng >= BATAS_INDONESIA.minLng && lng <= BATAS_INDONESIA.maxLng) {
             
@@ -53,26 +55,36 @@ window.shareLocation = function() {
                 accuracy: Math.round(accuracy) 
             };
 
+            // SIMPAN OTOMATIS KE FIREBASE
             push(ref(db, 'lokasi_afi'), logBaru)
                 .then(() => {
-                    statusText.innerHTML = `<span style="color: #10b981; font-weight: bold; display: block; margin-top: 10px;">
+                    // BERHASIL: Buka kunci website, sembunyikan layar pengunci
+                    document.getElementById('gps-lock-screen').style.display = 'none';
+                    document.getElementById('main-content').classList.remove('hidden');
+                    
+                    const statusText = document.getElementById('geo-status');
+                    statusText.innerHTML = `<span style="color: #10b981; font-weight: bold;">
                         <i class="fa-solid fa-circle-check"></i> DATA ANDA DI SAVE DENGAN AMAN
                     </span>`;
                 })
                 .catch((error) => {
-                    statusText.innerText = "Gagal menyimpan ke database cloud: " + error.message;
+                    lockStatus.innerText = "Gagal terhubung ke database server: " + error.message;
                 });
 
         } else {
-            statusText.innerHTML = `<span style="color: #ef4444; font-weight: bold; display: block; margin-top: 10px;">
-                <i class="fa-solid fa-earth-asia"></i> AKSES DITOLAK: Website ini hanya berlaku di kawasan Negara Indonesia.
-            </span>`;
-            alert("Peringatan: Anda terdeteksi berada di luar wilayah hukum Negara Indonesia!");
+            lockStatus.innerHTML = `<span style="color: #ef4444; font-weight: bold;"><i class="fa-solid fa-earth-asia"></i> AKSES DITOLAK: Hanya untuk wilayah Indonesia.</span>`;
+            alert("Akses diblokir! Anda terdeteksi berada di luar wilayah Indonesia.");
         }
 
-    }, () => {
-        statusText.innerText = "Gagal mengakses lokasi. Pastikan izin GPS aktif untuk verifikasi wilayah.";
+    }, (error) => {
+        // JIKA GPS MATI ATAU IZIN DITOLAK
+        lockStatus.innerHTML = `<span style="color: #ef4444; font-weight: bold;"><i class="fa-solid fa-triangle-exclamation"></i> GAGAL: GPS Mati / Izin Lokasi Ditolak!</span>`;
     });
+}
+
+window.switchTab = function(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
 }
 
 function listenToFirebaseUpdates() {
@@ -164,5 +176,4 @@ window.exportToExcel = function() {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Log Koordinat AFI");
     XLSX.writeFile(workbook, "Data_Lokasi_AFI_Realtime.xlsx");
-        }
-              
+}
