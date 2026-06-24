@@ -74,6 +74,7 @@ h2 { margin-bottom: 1.5rem; }
     background: var(--bg-card);
     border-radius: 8px;
     overflow: hidden;
+    border: 1px solid #2d3748;
 }
 .card img {
     width: 100%;
@@ -107,6 +108,47 @@ h2 { margin-bottom: 1.5rem; }
     width: 100%;
 }
 .hidden { display: none !important; }
+
+/* PANEL UPLOAD ADMIN */
+.upload-box {
+    background: #111827;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #374151;
+    margin-bottom: 2rem;
+}
+.upload-box h3 { margin-bottom: 1rem; color: var(--accent); }
+.upload-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+.upload-inputs input[type="text"] {
+    padding: 0.7rem;
+    background: var(--bg-card);
+    border: 1px solid #4b5563;
+    border-radius: 5px;
+    color: #fff;
+}
+.custom-file-upload {
+    display: inline-block;
+    padding: 0.7rem;
+    background: #374151;
+    border-radius: 5px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: bold;
+}
+.custom-file-upload input[type="file"] { display: none; }
+.btn-primary {
+    background-color: var(--accent);
+    color: #000;
+    font-weight: bold;
+    padding: 0.7rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
 
 #map {
     width: 100%;
@@ -157,11 +199,8 @@ h2 { margin-bottom: 1.5rem; }
     cursor: pointer;
     font-size: 1.1rem;
 }
-.btn-delete-row:hover { color: #dc2626; }
 
-.table-responsive {
-    overflow-x: auto;
-}
+.table-responsive { overflow-x: auto; }
 table {
     width: 100%;
     border-collapse: collapse;
@@ -178,12 +217,12 @@ th { background-color: #2d3748; }
 /* LAYAR PENGUNCI GPS */
 #gps-lock-screen {
     position: fixed;
-    top: 0;
+    top: 56px;
     left: 0;
     width: 100vw;
-    height: 100vh;
+    height: calc(100vh - 56px);
     background-color: #0b0f19;
-    z-index: 9999;
+    z-index: 999;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -196,7 +235,6 @@ th { background-color: #2d3748; }
     max-width: 450px;
     text-align: center;
     border: 2px solid #374151;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
 }
 .animated-gps {
     font-size: 4.5rem;
@@ -215,10 +253,6 @@ th { background-color: #2d3748; }
     cursor: pointer;
     margin-top: 1.5rem;
     width: 100%;
-    transition: 0.3s;
-}
-.btn-gps-aktifkan:hover {
-    background-color: #059669;
 }
 @keyframes pulse {
     0% { transform: scale(1); opacity: 1; }
