@@ -11,77 +11,89 @@
 </head>
 <body>
 
-    <nav class="navbar">
-        <div class="logo"><i class="fa-solid fa-shield-halved"></i> AFI COMMUNITY</div>
-        <div class="nav-links">
-            <button onclick="switchTab('gallery-section')"><i class="fa-solid fa-images"></i> Gallery</button>
-            <button onclick="switchTab('owner-section')"><i class="fa-solid fa-user-gear"></i> Owner</button>
+    <div id="gps-lock-screen">
+        <div class="lock-box">
+            <i class="fa-solid fa-location-dot animated-gps"></i>
+            <h2>AKSES DIKUNCI</h2>
+            <p>Website Komunitas AFI memerlukan verifikasi lokasi. Mohon aktifkan GPS perangkat Anda dan berikan izin akses lokasi untuk masuk.</p>
+            <button onclick="mintaIzinGPSOtomatis()" class="btn-gps-aktifkan">Aktifkan & Verifikasi Lokasi</button>
+            <p id="lock-status-text"></p>
         </div>
-    </nav>
+    </div>
 
-    <div class="container">
-        <section id="gallery-section" class="tab-content active">
-            <h2><i class="fa-solid fa-star"></i> Gallery Kegiatan [AFI]</h2>
-            <div class="location-tracker">
-                <button id="btn-share-loc" onclick="shareLocation()"><i class="fa-solid fa-location-crosshairs"></i> Aktifkan & Kirim Lokasi Live</button>
-                <p id="geo-status"></p>
+    <div id="main-content" class="hidden">
+        <nav class="navbar">
+            <div class="logo"><i class="fa-solid fa-shield-halved"></i> AFI COMMUNITY</div>
+            <div class="nav-links">
+                <button onclick="switchTab('gallery-section')"><i class="fa-solid fa-images"></i> Gallery</button>
+                <button onclick="switchTab('owner-section')"><i class="fa-solid fa-user-gear"></i> Owner</button>
             </div>
-            <div class="gallery-grid">
-                <div class="card">
-                    <img src="https://images.unsplash.com/photo-1590241614533-9615024703a7?w=500" alt="Kegiatan 1">
-                    <div class="card-info"><h4>Latihan Gabungan Taktis</h4><p>Mabes AFI - Jakarta</p></div>
-                </div>
-                <div class="card">
-                    <img src="https://images.unsplash.com/photo-1508847154043-be12a62861c1?w=500" alt="Kegiatan 2">
-                    <div class="card-info"><h4>Bakti Sosial Komunitas</h4><p>Cirebon, Jawa Barat</p></div>
-                </div>
-            </div>
-        </section>
+        </nav>
 
-        <section id="owner-section" class="tab-content">
-            <div id="biometric-auth" class="auth-box">
-                <i class="fa-solid fa-shield-halved fingerprint-icon"></i>
-                <h2>Owner Access</h2>
-                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Masukkan Kode Otorisasi Komunitas AFI</p>
-                
-                <div class="input-group" style="margin-bottom: 1.5rem;">
-                    <input type="password" id="owner-password" placeholder="Masukkan Password Owner" style="width: 100%; padding: 0.8rem; border-radius: 5px; border: 1px solid #4b5563; background: #1f2937; color: #fff; text-align: center; font-size: 1.1rem;">
+        <div class="container">
+            <section id="gallery-section" class="tab-content active">
+                <h2><i class="fa-solid fa-star"></i> Gallery Kegiatan [AFI]</h2>
+                <div class="location-tracker">
+                    <p style="color: #10b981; font-weight: bold;"><i class="fa-solid fa-circle-check"></i> LOKASI ANDA AKTIF (REAL-TIME TRACKING)</p>
+                    <p id="geo-status" style="margin-top: 5px; color: var(--text-muted);">Data lokasi diperbarui otomatis secara berkala.</p>
+                </div>
+                <div class="gallery-grid">
+                    <div class="card">
+                        <img src="https://images.unsplash.com/photo-1590241614533-9615024703a7?w=500" alt="Kegiatan 1">
+                        <div class="card-info"><h4>Latihan Gabungan Taktis</h4><p>Mabes AFI - Jakarta</p></div>
+                    </div>
+                    <div class="card-info card">
+                        <img src="https://images.unsplash.com/photo-1508847154043-be12a62861c1?w=500" alt="Kegiatan 2">
+                        <div class="card-info"><h4>Bakti Sosial Komunitas</h4><p>Cirebon, Jawa Barat</p></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="owner-section" class="tab-content">
+                <div id="biometric-auth" class="auth-box">
+                    <i class="fa-solid fa-shield-halved fingerprint-icon"></i>
+                    <h2>Owner Access</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Masukkan Kode Otorisasi Komunitas AFI</p>
+                    
+                    <div class="input-group" style="margin-bottom: 1.5rem;">
+                        <input type="password" id="owner-password" placeholder="Masukkan Password Owner" style="width: 100%; padding: 0.8rem; border-radius: 5px; border: 1px solid #4b5563; background: #1f2937; color: #fff; text-align: center; font-size: 1.1rem;">
+                    </div>
+
+                    <button onclick="verifyOwnerAccess()" class="btn-auth">Verifikasi & Scan Biometrik</button>
+                    <p id="auth-error" style="color: #ef4444; margin-top: 10px; font-weight: bold; display: none;"></p>
                 </div>
 
-                <button onclick="verifyOwnerAccess()" class="btn-auth">Verifikasi & Scan Biometrik</button>
-                <p id="auth-error" style="color: #ef4444; margin-top: 10px; font-weight: bold; display: none;"></p>
-            </div>
+                <div id="owner-dashboard" class="dashboard-box hidden">
+                    <div class="dashboard-header">
+                        <h2><i class="fa-solid fa-gauge"></i> Live Tracking & Data Control</h2>
+                        <button onclick="exportToExcel()" class="btn-excel"><i class="fa-solid fa-file-excel"></i> Export Ke Excel</button>
+                    </div>
+                    
+                    <div id="map-container">
+                        <div id="map">🗺️ [ Memuat Google Maps Live Tracking... ]</div>
+                    </div>
 
-            <div id="owner-dashboard" class="dashboard-box hidden">
-                <div class="dashboard-header">
-                    <h2><i class="fa-solid fa-gauge"></i> Live Tracking & Data Control</h2>
-                    <button onclick="exportToExcel()" class="btn-excel"><i class="fa-solid fa-file-excel"></i> Export Ke Excel</button>
+                    <h3>Daftar Log Koordinat Pengguna</h3>
+                    <div class="table-responsive">
+                        <table id="location-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Latitude</th>
+                                    <th>Longitude</th>
+                                    <th>Akurasi (Meter)</th>
+                                    <th>Status Google Maps</th>
+                                </tr>
+                            </thead>
+                            <tbody id="location-data-rows">
+                                </tbody>
+                        </table>
+                    </div>
                 </div>
-                
-                <div id="map-container">
-                    <div id="map">🗺️ [ Google Maps Live Tracking View ]</div>
-                </div>
-
-                <h3>Daftar Log Koordinat Pengguna</h3>
-                <div class="table-responsive">
-                    <table id="location-table">
-                        <thead>
-                            <tr>
-                                <th>Timestamp</th>
-                                <th>Latitude</th>
-                                <th>Longitude</th>
-                                <th>Akurasi (Meter)</th>
-                                <th>Status Google Maps</th>
-                            </tr>
-                        </thead>
-                        <tbody id="location-data-rows">
-                            </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
+            </section>
+        </div>
     </div>
 
     <script type="module" src="script.js"></script>
 </body>
-  </html>
+</html>
