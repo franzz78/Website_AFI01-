@@ -157,3 +157,53 @@ th, td {
 }
 th { background-color: #2d3748; }
 
+/* LAYAR PENGUNCI GPS */
+#gps-lock-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #0b0f19;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+}
+.lock-box {
+    background: var(--bg-card);
+    padding: 3rem 2rem;
+    border-radius: 12px;
+    max-width: 450px;
+    text-align: center;
+    border: 2px solid #374151;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+.animated-gps {
+    font-size: 4.5rem;
+    color: #ef4444;
+    margin-bottom: 1.5rem;
+    animation: pulse 2s infinite;
+}
+.btn-gps-aktifkan {
+    background-color: var(--accent);
+    color: #000;
+    font-weight: bold;
+    font-size: 1.1rem;
+    border: none;
+    padding: 0.9rem 2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    width: 100%;
+    transition: 0.3s;
+}
+.btn-gps-aktifkan:hover {
+    background-color: #059669;
+}
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.6; color: var(--accent); }
+    100% { transform: scale(1); opacity: 1; }
+}
