@@ -11,85 +11,104 @@
 </head>
 <body>
 
-    <!-- LAYAR PENGUNCI GPS (Muncul otomatis di awal) -->
+    <!-- NAVIGASI (Selalu Muncul) -->
+    <nav class="navbar">
+        <div class="logo"><i class="fa-solid fa-shield-halved"></i> AFI COMMUNITY</div>
+        <div class="nav-links">
+            <button onclick="switchTab('gallery-section')"><i class="fa-solid fa-images"></i> Gallery</button>
+            <button onclick="switchTab('admin-section')"><i class="fa-solid fa-user-gear"></i> Admin</button>
+        </div>
+    </nav>
+
+    <!-- LAYAR PENGUNCI GPS (Hanya menutupi area konten Gallery jika belum aktif) -->
     <div id="gps-lock-screen">
         <div class="lock-box">
             <i class="fa-solid fa-location-dot animated-gps"></i>
             <h2>AKSES DIKUNCI</h2>
-            <p>Website Komunitas AFI memerlukan verifikasi lokasi. Mohon aktifkan GPS perangkat Anda dan berikan izin akses lokasi untuk masuk.</p>
+            <p>Halaman Gallery memerlukan verifikasi lokasi. Mohon aktifkan GPS perangkat Anda dan berikan izin akses lokasi untuk masuk.</p>
             <button onclick="mintaIzinGPSOtomatis()" class="btn-gps-aktifkan">Aktifkan & Verifikasi Lokasi</button>
             <p id="lock-status-text"></p>
         </div>
     </div>
 
-    <!-- ISI WEBSITE (Hanya bisa diakses jika GPS Lolos) -->
-    <div id="main-content" class="hidden">
-        <!-- NAVIGASI -->
-        <nav class="navbar">
-            <div class="logo"><i class="fa-solid fa-shield-halved"></i> AFI COMMUNITY</div>
-            <div class="nav-links">
-                <button onclick="switchTab('gallery-section')"><i class="fa-solid fa-images"></i> Gallery</button>
-                <button onclick="switchTab('admin-section')"><i class="fa-solid fa-user-gear"></i> Admin</button>
+    <div class="container">
+        <!-- ================= GALLERY SECTION ================= -->
+        <section id="gallery-section" class="tab-content active hidden">
+            <h2><i class="fa-solid fa-star"></i> Gallery Kegiatan [AFI]</h2>
+            <div class="location-tracker">
+                <p style="color: #10b981; font-weight: bold;"><i class="fa-solid fa-circle-check"></i> LOKASI ANDA AKTIF</p>
+                <p id="geo-status" style="margin-top: 5px; color: var(--text-muted);">Data lokasi diperbarui otomatis secara berkala.</p>
             </div>
-        </nav>
+            <!-- Wadah foto kosong, akan terisi otomatis dari Firebase -->
+            <div class="gallery-grid" id="gallery-container"></div>
+        </section>
 
-        <div class="container">
-            <!-- ================= GALLERY SECTION ================= -->
-            <section id="gallery-section" class="tab-content active">
-                <h2><i class="fa-solid fa-star"></i> Gallery Kegiatan [AFI]</h2>
-                <div class="location-tracker">
-                    <p style="color: #10b981; font-weight: bold;"><i class="fa-solid fa-circle-check"></i> LOKASI ANDA AKTIF</p>
-                    <p id="geo-status" style="margin-top: 5px; color: var(--text-muted);">Data lokasi diperbarui otomatis secara berkala.</p>
-                    
-            <!-- ================= ADMIN SECTION ================= -->
-            <section id="admin-section" class="tab-content">
-                <div id="biometric-auth" class="auth-box">
-                    <i class="fa-solid fa-shield-halved fingerprint-icon"></i>
-                    <h2>Admin Access</h2>
-                    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Masukkan Kode Otorisasi Komunitas AFI</p>
-                    
-                    <div class="input-group" style="margin-bottom: 1.5rem;">
-                        <input type="password" id="owner-password" placeholder="Masukkan Password Admin" style="width: 100%; padding: 0.8rem; border-radius: 5px; border: 1px solid #4b5563; background: #1f2937; color: #fff; text-align: center; font-size: 1.1rem;">
-                    </div>
-
-                    <button onclick="verifyOwnerAccess()" class="btn-auth">Verifikasi & Scan Biometrik</button>
-                    <p id="auth-error" style="color: #ef4444; margin-top: 10px; font-weight: bold; display: none;"></p>
+        <!-- ================= ADMIN SECTION ================= -->
+        <section id="admin-section" class="tab-content">
+            <div id="biometric-auth" class="auth-box">
+                <i class="fa-solid fa-shield-halved fingerprint-icon"></i>
+                <h2>Admin Access</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Masukkan Kode Otorisasi Komunitas AFI</p>
+                
+                <div class="input-group" style="margin-bottom: 1.5rem;">
+                    <input type="password" id="owner-password" placeholder="Masukkan Password Admin" style="width: 100%; padding: 0.8rem; border-radius: 5px; border: 1px solid #4b5563; background: #1f2937; color: #fff; text-align: center; font-size: 1.1rem;">
                 </div>
 
-                <div id="admin-dashboard" class="dashboard-box hidden">
-                    <div class="dashboard-header">
-                        <h2><i class="fa-solid fa-gauge"></i> Live Tracking & Data Control</h2>
-                        <div class="action-buttons">
-                            <button onclick="exportToExcel()" class="btn-excel"><i class="fa-solid fa-file-excel"></i> Export Ke Excel</button>
-                            <button onclick="resetAllData()" class="btn-danger"><i class="fa-solid fa-trash-can"></i> Reset All Data</button>
-                        </div>
-                    </div>
-                    
-                    <div id="map-container">
-                        <div id="map">🗺️ [ Memuat Google Maps Live Tracking... ]</div>
-                    </div>
+                <button onclick="verifyOwnerAccess()" class="btn-auth">Verifikasi Admin</button>
+                <p id="auth-error" style="color: #ef4444; margin-top: 10px; font-weight: bold; display: none;"></p>
+            </div>
 
-                    <h3>Daftar Log Koordinat Pengguna</h3>
-                    <div class="table-responsive">
-                        <table id="location-table">
-                            <thead>
-                                <tr>
-                                    <th>Timestamp</th>
-                                    <th>Latitude</th>
-                                    <th>Longitude</th>
-                                    <th>Akurasi</th>
-                                    <th>Status Google Maps</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="location-data-rows">
-                                <!-- Data Maps dari Firebase masuk di sini -->
-                            </tbody>
-                        </table>
+            <!-- DASHBOARD ADMIN -->
+            <div id="admin-dashboard" class="dashboard-box hidden">
+                
+                <!-- FITUR UPLOAD KEGIATAN BARU -->
+                <div class="upload-box">
+                    <h3><i class="fa-solid fa-cloud-arrow-up"></i> Tambah Kegiatan ke Gallery</h3>
+                    <div class="upload-inputs">
+                        <input type="text" id="upload-title" placeholder="Judul Kegiatan (Contoh: Latihan Gabungan)">
+                        <input type="text" id="upload-desc" placeholder="Lokasi/Keterangan (Contoh: Cirebon, Jawa Barat)">
+                        <label class="custom-file-upload">
+                            <input type="file" id="upload-file" accept="image/*">
+                            <i class="fa-solid fa-image"></i> Pilih Gambar dari Galeri
+                        </label>
+                        <button onclick="uploadKegiatanBaru()" class="btn-primary">Post ke Gallery</button>
                     </div>
                 </div>
-            </section>
-        </div>
+
+                <hr style="border: 1px solid #2d3748; margin: 2rem 0;">
+
+                <div class="dashboard-header">
+                    <h2><i class="fa-solid fa-gauge"></i> Live Tracking & Data Control</h2>
+                    <div class="action-buttons">
+                        <button onclick="exportToExcel()" class="btn-excel"><i class="fa-solid fa-file-excel"></i> Export Ke Excel</button>
+                        <button onclick="resetAllData()" class="btn-danger"><i class="fa-solid fa-trash-can"></i> Reset All Data</button>
+                    </div>
+                </div>
+                
+                <div id="map-container">
+                    <div id="map">🗺️ [ Memuat Google Maps Live Tracking... ]</div>
+                </div>
+
+                <h3>Daftar Log Koordinat Pengguna</h3>
+                <div class="table-responsive">
+                    <table id="location-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Latitude</th>
+                                <th>Longitude</th>
+                                <th>Akurasi</th>
+                                <th>Status Google Maps</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="location-data-rows">
+                            <!-- Data Kordinat masuk di sini -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
     </div>
 
     <script type="module" src="script.js"></script>
