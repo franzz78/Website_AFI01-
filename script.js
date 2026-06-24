@@ -24,8 +24,10 @@ const BATAS_INDONESIA = {
 
 let localDatabaseRecords = [];
 
+// CEK GPS OTOMATIS SAAT BUKA HALAMAN UTAMA (GALLERY)
 window.onload = function() {
     mintaIzinGPSOtomatis();
+    listenToGalleryUpdates(); // Sinkronisasi database gambar secara real-time
 }
 
 window.mintaIzinGPSOtomatis = function() {
@@ -46,46 +48,100 @@ window.mintaIzinGPSOtomatis = function() {
         if (lat >= BATAS_INDONESIA.minLat && lat <= BATAS_INDONESIA.maxLat &&
             lng >= BATAS_INDONESIA.minLng && lng <= BATAS_INDONESIA.maxLng) {
             
-            const logBaru = { 
-                timestamp: now, 
-                lat: lat, 
-                lng: lng, 
-                accuracy: Math.round(accuracy) 
-            };
+            const logBaru = { timestamp: now, lat: lat, lng: lng, accuracy: Math.round(accuracy) };
 
             push(ref(db, 'lokasi_afi'), logBaru)
                 .then(() => {
+                    // BUKA KUNCI KHUSUS MENU GALLERY
                     document.getElementById('gps-lock-screen').style.display = 'none';
-                    document.getElementById('main-content').classList.remove('hidden');
-                    
-                    const statusText = document.getElementById('geo-status');
-                    statusText.innerHTML = `<span style="color: #10b981; font-weight: bold;">
-                        <i class="fa-solid fa-circle-check"></i> DATA ANDA DI SAVE DENGAN AMAN
-                    </span>`;
+                    document.getElementById('gallery-section').classList.remove('hidden');
                 })
-                .catch((error) => {
-                    lockStatus.innerText = "Gagal terhubung ke database server: " + error.message;
-                });
+                .catch((error) => { lockStatus.innerText = "Server Error: " + error.message; });
 
         } else {
-            lockStatus.innerHTML = `<span style="color: #ef4444; font-weight: bold;"><i class="fa-solid fa-earth-asia"></i> AKSES DITOLAK: Hanya untuk wilayah Indonesia.</span>`;
-            alert("Akses diblokir! Anda terdeteksi berada di luar wilayah Indonesia.");
+            lockStatus.innerHTML = `<span style="color: #ef4444; font-weight: bold;"><i class="fa-solid fa-earth-asia"></i> AKSES DITOLAK: Luar Wilayah Hukum Indonesia.</span>`;
+            alert("Akses diblokir karena Anda di luar wilayah Indonesia!");
         }
 
-    }, (error) => {
-        lockStatus.innerHTML = `<span style="color: #ef4444; font-weight: bold;"><i class="fa-solid fa-triangle-exclamation"></i> GAGAL: GPS Mati / Izin Lokasi Ditolak!</span>`;
+    }, () => {
+        lockStatus.innerHTML = `<span style="color: #ef4444; font-weight: bold;"><i class="fa-solid fa-triangle-exclamation"></i> GAGAL: GPS Mati / Akses Lokasi Ditolak!</span>`;
     });
 }
 
+// KHUSUS NAVIGASI TAB MENU (Agar Tab Admin Bisa Diakses Kapan Saja)
 window.switchTab = function(tabId) {
-    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('active'));
+    
+    if(tabId === 'admin-section') {
+        document.getElementById('gps-lock-screen').style.display = 'none';
+        document.getElementById('gallery-section').style.display = 'none';
+        document.getElementById('admin-section').style.display = 'block';
+    } else {
+        document.getElementById('admin-section').style.display = 'none';
+        document.getElementById('gallery-section').style.display = 'block';
+        // Cek jika lock screen harus muncul kembali
+        if(document.getElementById('gallery-section').classList.contains('hidden')) {
+            document.getElementById('gps-lock-screen').style.display = 'flex';
+        }
+    }
 }
 
+// AMBIL DATA GAMBAR DARI FIREBASE SECARA LIVE KE DISPLAY GALLERY
+function listenToGalleryUpdates() {
+    onValue(ref(db, 'gallery_afi'), (snapshot) => {
+        const data = snapshot.val();
+        const galleryGrid = document.getElementById('gallery-container');
+        galleryGrid.innerHTML = "";
+
+        if(data) {
+            Object.keys(data).forEach(key => {
+                const item = data[key];
+                const cardHtml = `<div class="card">
+                    <img src="${item.image}" alt="Kegiatan">
+                    <div class="card-info">
+                        <h4>${item.title}</h4>
+                        <p>${item.desc}</p>
+                    </div>
+                </div>`;
+                galleryGrid.insertAdjacentHTML('afterbegin', cardHtml);
+            });
+        } else {
+            galleryGrid.innerHTML = `<p style="color: var(--text-muted); text-align:center; width:100%;">Belum ada foto kegiatan di gallery.</p>`;
+        }
+    });
+}
+
+// UPLOAD DATA KEGIATAN BARU (CONVERT GAMBAR KE BASE64)
+window.uploadKegiatanBaru = function() {
+    const title = document.getElementById('upload-title').value;
+    const desc = document.getElementById('upload-desc').value;
+    const fileInput = document.getElementById('upload-file').files[0];
+
+    if(!title || !desc || !fileInput) {
+        alert("Mohon isi judul, lokasi, dan pilih file gambar terlebih dahulu!");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = function() {
+        const base64Image = reader.result;
+
+        const dataKegiatan = { title: title, desc: desc, image: base64Image };
+        push(ref(db, 'gallery_afi'), dataKegiatan)
+            .then(() => {
+                alert("Berhasil memposting kegiatan baru!");
+                document.getElementById('upload-title').value = "";
+                document.getElementById('upload-desc').value = "";
+                document.getElementById('upload-file').value = "";
+            })
+            .catch(err => alert("Gagal upload: " + err.message));
+    }
+    reader.readAsDataURL(fileInput);
+}
+
+// SINKRONISASI LIVE TRACKING UNTUK DASHBOARD ADMIN
 function listenToFirebaseUpdates() {
-    const dbRef = ref(db, 'lokasi_afi');
-    
-    onValue(dbRef, (snapshot) => {
+    onValue(ref(db, 'lokasi_afi'), (snapshot) => {
         const data = snapshot.val();
         const tableBody = document.getElementById('location-data-rows');
         tableBody.innerHTML = ""; 
@@ -94,7 +150,6 @@ function listenToFirebaseUpdates() {
         if (data) {
             Object.keys(data).forEach((key) => {
                 const record = data[key];
-                // Simpan key Firebase agar bisa dihapus secara spesifik nanti
                 record.firebaseKey = key; 
                 localDatabaseRecords.push(record); 
 
@@ -115,83 +170,48 @@ function listenToFirebaseUpdates() {
             updateGoogleMapsView(latestRecord.lat, latestRecord.lng);
         } else {
             tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Belum ada data koordinat di database.</td></tr>`;
-            const mapDiv = document.getElementById('map');
-            mapDiv.innerHTML = "🗺️ [ Tidak ada data lokasi untuk ditampilkan ]";
+            document.getElementById('map').innerHTML = "🗺️ [ Tidak ada data lokasi untuk ditampilkan ]";
         }
     });
 }
 
-// HAPUS SATU DATA BERDASARKAN ID KEY DI FIREBASE
 window.deleteSingleRecord = function(key) {
-    if (confirm("Apakah Anda yakin ingin menghapus data koordinat ini secara permanen?")) {
-        remove(ref(db, `lokasi_afi/${key}`))
-            .then(() => alert("Data berhasil dihapus."))
-            .catch((err) => alert("Gagal menghapus data: " + err.message));
+    if (confirm("Hapus data koordinat ini secara permanen?")) {
+        remove(ref(db, `lokasi_afi/${key}`)).catch((err) => alert(err.message));
     }
 }
 
-// HAPUS SEMUHA DATA SECARA TOTAL
 window.resetAllData = function() {
-    if (confirm("⚠️ PERINGATAN: Tindakan ini akan menghapus SELURUH data koordinat dari database Firebase secara permanen. Lanjutkan?")) {
-        remove(ref(db, 'lokasi_afi'))
-            .then(() => alert("Seluruh database koordinat berhasil dibersihkan!"))
-            .catch((err) => alert("Gagal mereset database: " + err.message));
+    if (confirm("Hapus SELURUH data koordinat dari database Firebase?")) {
+        remove(ref(db, 'lokasi_afi')).catch((err) => alert(err.message));
     }
 }
 
 function updateGoogleMapsView(lat, lng) {
     const mapDiv = document.getElementById('map');
-    mapDiv.innerHTML = `<iframe width="100%" height="100%" frameborder="0" style="border:0; border-radius:8px;" src="https://maps.google.com/maps?q=${lat},${lng}&z=15&output=embed"></iframe>`;
+    mapDiv.innerHTML = `<iframe width="100%" height="100%" frameborder="0" style="border:0;" src="https://maps.google.com/maps?q=${lat},${lng}&z=15&output=embed"></iframe>`;
 }
 
-window.verifyOwnerAccess = async function() {
+window.verifyOwnerAccess = function() {
     const passwordInput = document.getElementById('owner-password').value;
-    const errorText = document.getElementById('auth-error');
-
-    if (passwordInput !== "OWNER_0089##") {
-        errorText.innerText = "❌ KODE OTORISASI SALAH. AKSES DITOLAK!";
+    if (passwordInput === "OWNER_0089##") {
+        document.getElementById('biometric-auth').classList.add('hidden');
+        document.getElementById('admin-dashboard').classList.remove('hidden');
+        listenToFirebaseUpdates();
+    } else {
+        const errorText = document.getElementById('auth-error');
+        errorText.innerText = "❌ KODE OTORISASI SALAH!";
         errorText.style.display = "block";
-        return;
     }
-
-    errorText.style.display = "none";
-
-    if (!window.PublicKeyCredential) {
-        alert("Password Benar. Perangkat tidak mendukung Biometrik, mengalihkan langsung ke Dashboard Admin.");
-        showDashboard();
-        return;
-    }
-
-    try {
-        alert("Password Terverifikasi! Silakan konfirmasi Sidik Jari / FaceID Anda untuk membuka enkripsi data.");
-        showDashboard();
-    } catch (error) {
-        alert("Autentikasi Biometrik Gagal: " + error.message);
-    }
-}
-
-function showDashboard() {
-    document.getElementById('biometric-auth').classList.add('hidden');
-    document.getElementById('admin-dashboard').classList.remove('hidden');
-    listenToFirebaseUpdates();
 }
 
 window.exportToExcel = function() {
-    if(localDatabaseRecords.length === 0) {
-        alert("Tidak ada data untuk di-export!");
-        return;
-    }
-
+    if(localDatabaseRecords.length === 0) return alert("Tidak ada data!");
     let formatDataExcel = localDatabaseRecords.map(item => ({
-        "Waktu": item.timestamp,
-        "Latitude": item.lat,
-        "Longitude": item.lng,
-        "Akurasi Meter": item.accuracy,
-        "Link Google Maps": `https://www.google.com/maps?q=${item.lat},${item.lng}`
+        "Waktu": item.timestamp, "Latitude": item.lat, "Longitude": item.lng, "Akurasi": item.accuracy, "Maps Link": `https://www.google.com/maps?q=${item.lat},${item.lng}`
     }));
-
     const worksheet = XLSX.utils.json_to_sheet(formatDataExcel);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Log Koordinat AFI");
-    XLSX.writeFile(workbook, "Data_Lokasi_AFI_Realtime.xlsx");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Log Koordinat");
+    XLSX.writeFile(workbook, "Data_Lokasi_AFI.xlsx");
 }
