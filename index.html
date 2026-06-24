@@ -11,6 +11,7 @@
 </head>
 <body>
 
+    <!-- LAYAR PENGUNCI GPS (Muncul otomatis di awal) -->
     <div id="gps-lock-screen">
         <div class="lock-box">
             <i class="fa-solid fa-location-dot animated-gps"></i>
@@ -21,52 +22,56 @@
         </div>
     </div>
 
+    <!-- ISI WEBSITE (Hanya bisa diakses jika GPS Lolos) -->
     <div id="main-content" class="hidden">
+        <!-- NAVIGASI -->
         <nav class="navbar">
             <div class="logo"><i class="fa-solid fa-shield-halved"></i> AFI COMMUNITY</div>
             <div class="nav-links">
                 <button onclick="switchTab('gallery-section')"><i class="fa-solid fa-images"></i> Gallery</button>
-                <button onclick="switchTab('owner-section')"><i class="fa-solid fa-user-gear"></i> Owner</button>
+                <button onclick="switchTab('admin-section')"><i class="fa-solid fa-user-gear"></i> Admin</button>
             </div>
         </nav>
 
         <div class="container">
+            <!-- ================= GALLERY SECTION ================= -->
             <section id="gallery-section" class="tab-content active">
                 <h2><i class="fa-solid fa-star"></i> Gallery Kegiatan [AFI]</h2>
                 <div class="location-tracker">
-                    <p style="color: #10b981; font-weight: bold;"><i class="fa-solid fa-circle-check"></i> LOKASI ANDA AKTIF (REAL-TIME TRACKING)</p>
+                    <p style="color: #10b981; font-weight: bold;"><i class="fa-solid fa-circle-check"></i> LOKASI ANDA AKTIF</p>
                     <p id="geo-status" style="margin-top: 5px; color: var(--text-muted);">Data lokasi diperbarui otomatis secara berkala.</p>
                 </div>
                 <div class="gallery-grid">
+                    <!-- Kegiatan 1 Dihapus, Menyisakan Kegiatan Utama -->
                     <div class="card">
-                        <img src="https://images.unsplash.com/photo-1590241614533-9615024703a7?w=500" alt="Kegiatan 1">
-                        <div class="card-info"><h4>Latihan Gabungan Taktis</h4><p>Mabes AFI - Jakarta</p></div>
-                    </div>
-                    <div class="card-info card">
                         <img src="https://images.unsplash.com/photo-1508847154043-be12a62861c1?w=500" alt="Kegiatan 2">
                         <div class="card-info"><h4>Bakti Sosial Komunitas</h4><p>Cirebon, Jawa Barat</p></div>
                     </div>
                 </div>
             </section>
 
-            <section id="owner-section" class="tab-content">
+            <!-- ================= ADMIN SECTION ================= -->
+            <section id="admin-section" class="tab-content">
                 <div id="biometric-auth" class="auth-box">
                     <i class="fa-solid fa-shield-halved fingerprint-icon"></i>
-                    <h2>Owner Access</h2>
+                    <h2>Admin Access</h2>
                     <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Masukkan Kode Otorisasi Komunitas AFI</p>
                     
                     <div class="input-group" style="margin-bottom: 1.5rem;">
-                        <input type="password" id="owner-password" placeholder="Masukkan Password Owner" style="width: 100%; padding: 0.8rem; border-radius: 5px; border: 1px solid #4b5563; background: #1f2937; color: #fff; text-align: center; font-size: 1.1rem;">
+                        <input type="password" id="owner-password" placeholder="Masukkan Password Admin" style="width: 100%; padding: 0.8rem; border-radius: 5px; border: 1px solid #4b5563; background: #1f2937; color: #fff; text-align: center; font-size: 1.1rem;">
                     </div>
 
                     <button onclick="verifyOwnerAccess()" class="btn-auth">Verifikasi & Scan Biometrik</button>
                     <p id="auth-error" style="color: #ef4444; margin-top: 10px; font-weight: bold; display: none;"></p>
                 </div>
 
-                <div id="owner-dashboard" class="dashboard-box hidden">
+                <div id="admin-dashboard" class="dashboard-box hidden">
                     <div class="dashboard-header">
                         <h2><i class="fa-solid fa-gauge"></i> Live Tracking & Data Control</h2>
-                        <button onclick="exportToExcel()" class="btn-excel"><i class="fa-solid fa-file-excel"></i> Export Ke Excel</button>
+                        <div class="action-buttons">
+                            <button onclick="exportToExcel()" class="btn-excel"><i class="fa-solid fa-file-excel"></i> Export Ke Excel</button>
+                            <button onclick="resetAllData()" class="btn-danger"><i class="fa-solid fa-trash-can"></i> Reset All Data</button>
+                        </div>
                     </div>
                     
                     <div id="map-container">
@@ -81,12 +86,14 @@
                                     <th>Timestamp</th>
                                     <th>Latitude</th>
                                     <th>Longitude</th>
-                                    <th>Akurasi (Meter)</th>
+                                    <th>Akurasi</th>
                                     <th>Status Google Maps</th>
+                                    <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="location-data-rows">
-                                </tbody>
+                                <!-- Data Maps dari Firebase masuk di sini -->
+                            </tbody>
                         </table>
                     </div>
                 </div>
